@@ -1,25 +1,14 @@
+const mongoose = require("mongoose");
 require("dotenv").config();
-const { MongoClient } = require("mongodb");
 
-const url = process.env.MONGO_URL;
-const dbName = process.env.DB_NAME;
-
-module.exports.connectDB = async function connectDB() {
-  const client = new MongoClient(url, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-
+const connectDB = async () => {
   try {
-    // Kết nối tới MongoDB
-    await client.connect();
-    console.log("Kết nối thành công tới MongoDB!");
-
-    // Chọn database
-    const db = client.db(dbName);
-    return db; // Trả về đối tượng database để sử dụng
-  } catch (err) {
-    console.error("Lỗi kết nối:", err);
-    throw err;
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("MongoDB connected successfully");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    process.exit(1);
   }
 };
+
+module.exports = connectDB;

@@ -1,37 +1,41 @@
-const db = require("../../config/db");
-const bcrypt = require("bcryptjs");
-const userService = require("./user.services");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
-module.exports.register = async function (email, password) {
-  const salt = bcrypt.genSaltSync(10);
-  const hash = bcrypt.hashSync(password, salt);
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  role: {
+    type: String,
+    required: true,
+    enum: ["user", "admin"],
+    default: "user",
+  },
+});
 
-  return await userService.createOne(email, hash);
+const User = mongoose.model("User", userSchema);
+
+const register = async (username, email, password, role) => {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = new User({ username, email, password: hashedPassword, role });
+  await user.save();
+  return user;
 };
 
-module.exports.signIn = async function (email, password) {
-  console.log("Hello world !!!!");
-  let result = await db("user").select("*").where("email", email);
+const login = async (email, password) => {
+  const user = await User.findOne({ email });
+  if (!user) throw new Error("User not found");
 
-  if (result.length === 0) {
-    return {
-      message: `User with email: ${email} not existed`,
-    };
-  } else {
-    let [user] = result;
-    let comparedResult = await bcrypt.compare(password, user.password);
-    if (comparedResult) {
-      let token = jwt.sign(
-        { user_id: user.id, role: user.role },
-        process.env.TOKEN_SECRET,
-        { expiresIn: 1 * 60 }
-      );
-      return token;
-    } else {
-      return {
-        message: `Password is incorrect`,
-      };
-    }
-  }
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) throw new Error("Invalid credentials");
+
+  const token = jwt.sign(
+    { userId: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+  return { token, user };
 };
+
+module.exports = { register, login, User };
