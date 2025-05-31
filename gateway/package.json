@@ -1,0 +1,13 @@
+{
+  "name": "multi-service-project",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "express-gateway": "^1.16.11"
+  }
+}

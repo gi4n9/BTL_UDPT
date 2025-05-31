@@ -1,0 +1,13 @@
+{
+  "name": "multi-service-project",
+  "version": "1.0.0",
+  "scripts": {
+    "start:auth": "cd auth-service && npm start",
+    "start:user": "cd user-service && npm start",
+    "start:gateway": "cd gateway && npm start",
+    "start": "concurrently \"npm run start:auth\" \"npm run start:user\" \"npm run start:gateway\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
