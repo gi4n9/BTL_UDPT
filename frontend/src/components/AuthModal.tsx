@@ -1,17 +1,68 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Eye, EyeOff } from 'lucide-react';
+import { register, login } from '../../service/auth-service.ts';
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   mode: 'login' | 'register';
+  onToggleMode: () => void;
 }
-export function AuthModal({
-  isOpen,
-  onClose,
-  mode
-}: AuthModalProps) {
+
+export function AuthModal({ isOpen, onClose, mode, onToggleMode }: AuthModalProps) {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+  setSuccessMessage('');
+  console.log('Submitting form, mode:', mode);
+  console.log('Password:', password, 'Confirm Password:', confirmPassword); // Debug
+  try {
+    if (mode === 'register') {
+      const data = await register(firstName, lastName, email, password, confirmPassword);
+      console.log('Register success:', data);
+      setSuccessMessage('Đăng ký thành công!');
+      console.log('Setting success message');
+      const timeout = setTimeout(() => {
+        console.log('Running setTimeout, toggling mode');
+        onToggleMode();
+        setSuccessMessage('');
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+      }, 2000);
+      return () => clearTimeout(timeout);
+    } else {
+      const data = await login(email, password);
+      localStorage.setItem('token', data.token);
+      console.log('Login success:', data);
+      onClose();
+    }
+  } catch (error) {
+    console.log('Error occurred:', error);
+    if (error instanceof Error) {
+      setError(error.message);
+    } else {
+      setError('Đã xảy ra lỗi không xác định');
+    }
+  }
+};
+
   if (!isOpen) return null;
-  return <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-[#1C1F33] rounded-lg p-8 w-[500px] relative">
         <button onClick={onClose} className="absolute right-4 top-4 text-gray-400 hover:text-white">
           <X size={20} />
@@ -28,12 +79,70 @@ export function AuthModal({
             {mode === 'login' ? 'Login / Sign In' : 'Register / Sign Up'}
           </h2>
         </div>
-        <form className="space-y-4">
-          {mode === 'register' && <input type="text" placeholder="Enter Your Name" className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white" />}
-          <input type="email" placeholder="Enter Your Email" className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white" />
-          <input type="password" placeholder="Enter Password" className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white" />
-          {mode === 'register' && <input type="password" placeholder="Confirm Password" className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white" />}
-          {mode === 'login' && <div className="flex items-center justify-between text-sm">
+        {successMessage && <p className="text-green-500 text-sm mb-4">{successMessage}</p>}
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {mode === 'register' && (
+            <>
+              <input
+                type="text"
+                placeholder="Enter Your First Name"
+                className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Enter Your Last Name"
+                className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </>
+          )}
+          <input
+            type="email"
+            placeholder="Enter Your Email"
+            className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Enter Password"
+              className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white pr-10"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {mode === 'register' && (
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Confirm Password"
+                className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white pr-10"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          )}
+          {mode === 'login' && (
+            <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 text-gray-400">
                 <input type="checkbox" className="rounded" />
                 Keep Me Signed In
@@ -41,14 +150,30 @@ export function AuthModal({
               <button type="button" className="text-[#3AA5D1]">
                 Forgot Password?
               </button>
-            </div>}
+            </div>
+          )}
           <button type="submit" className="w-full bg-[#3AA5D1] text-white py-2 px-4 rounded-md text-sm hover:bg-[#2b8bb1]">
             {mode === 'login' ? 'Sign In' : 'Register Now'}
           </button>
           <div className="text-center text-sm text-gray-400">
-            {mode === 'login' ? <p>Don't Have An Account? Register Here</p> : <p>Already Have An Account? Login Here</p>}
+            {mode === 'login' ? (
+              <p>
+                Don't Have An Account?{' '}
+                <button type="button" onClick={onToggleMode} className="text-[#3AA5D1]">
+                  Register Here
+                </button>
+              </p>
+            ) : (
+              <p>
+                Already Have An Account?{' '}
+                <button type="button" onClick={onToggleMode} className="text-[#3AA5D1]">
+                  Login Here
+                </button>
+              </p>
+            )}
           </div>
         </form>
       </div>
-    </div>;
+    </div>
+  );
 }

@@ -1,26 +1,38 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const mongoose = require("mongoose");
+const { User, getNextSequence } = require("../models/user.models");
 
-const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  role: {
-    type: String,
-    required: true,
-    enum: ["user", "admin"],
-    default: "user",
-  },
-});
+const register = async (
+  firstName,
+  lastName,
+  email,
+  password,
+  confirmPassword
+) => {
+  if (password !== confirmPassword) {
+    throw new Error("Passwords do not match");
+  }
 
-const User = mongoose.model("User", userSchema);
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new Error("Email already exists");
+  }
 
-const register = async (username, email, password, role) => {
+  const nextId = await getNextSequence();
   const hashedPassword = await bcrypt.hash(password, 10);
-  const user = new User({ username, email, password: hashedPassword, role });
+  const user = new User({
+    id: nextId,
+    first_name: firstName,
+    last_name: lastName,
+    email,
+    password: hashedPassword,
+    status: "VERIFY",
+  });
   await user.save();
-  return user;
+  return {
+    message: "User registered successfully",
+    user: { id: user.id, email: user.email, status: user.status },
+  };
 };
 
 const login = async (email, password) => {
@@ -31,11 +43,14 @@ const login = async (email, password) => {
   if (!isMatch) throw new Error("Invalid credentials");
 
   const token = jwt.sign(
-    { userId: user._id, role: user.role },
+    { userId: user.id, email: user.email, status: user.status },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );
-  return { token, user };
+  return {
+    token,
+    user: { id: user.id, email: user.email, status: user.status },
+  };
 };
 
-module.exports = { register, login, User };
+module.exports = { register, login };

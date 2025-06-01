@@ -21,8 +21,7 @@ export function Footer() {
             click. Download Now!
           </p>
           <div className="flex flex-col gap-2">
-            <img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" alt="Get it on Google Play" className="h-10" />
-            <img src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-example-preferred.png" alt="Download on App Store" className="h-8" />
+            <img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" alt="Get it on Google Play" className="h-auto w-50" />
           </div>
         </div>
         <div>

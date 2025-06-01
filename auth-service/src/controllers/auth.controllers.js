@@ -2,14 +2,18 @@ const authService = require("../services/auth.services");
 
 const register = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { first_name, last_name, email, password, confirmPassword } =
+      req.body;
+    console.log(req.body);
+    console.log(confirmPassword);
     const user = await authService.register(
-      username,
+      first_name,
+      last_name,
       email,
       password,
-      role || "user"
+      confirmPassword
     );
-    res.status(201).json({ message: "User registered successfully", user });
+    res.status(201).json(user);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -26,7 +30,6 @@ const login = async (req, res) => {
 };
 
 const logout = (req, res) => {
-  // Since we're using JWT, logout is typically handled client-side by deleting the token
   res.status(200).json({ message: "Logout successful" });
 };
 

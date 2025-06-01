@@ -34,7 +34,7 @@ export function Sidebar() {
         <div className="h-10 w-10 rounded-full bg-[#3AA5D1] flex items-center justify-center text-white font-bold shrink-0">
           M
         </div>
-        {isExpanded && <span className="ml-3 text-white font-semibold">Miraculous</span>}
+        {isExpanded && <span className="ml-3 text-white font-semibold">Muzik</span>}
       </div>
       <div className="flex flex-col flex-1 px-2">
         <button onClick={() => scrollToSection('hero')} className={`flex items-center p-2 rounded-md mb-2 transition-colors ${isExpanded ? 'px-4' : 'justify-center'} ${activeSection === 'hero' ? 'text-white bg-[#3AA5D1]' : 'text-gray-400 hover:text-white'}`}>
