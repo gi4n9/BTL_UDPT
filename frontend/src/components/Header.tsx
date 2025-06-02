@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Globe, User, LogOut } from 'lucide-react';
 import { AuthModal } from './AuthModal.tsx';
 import { getUserProfile, logout } from '../../service/auth-service.ts';
+import { useNavigate } from 'react-router-dom';
 
 interface UserProfile {
   id: number;
@@ -25,6 +26,7 @@ export function Header() {
   });
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMode = () => {
     setAuthModal({
@@ -43,22 +45,39 @@ export function Header() {
         console.error('Failed to fetch user profile:', error);
         localStorage.removeItem('token');
         setUser(null);
+        navigate('/');
       }
+    } else {
+      setUser(null);
+      navigate('/');
     }
   };
 
   useEffect(() => {
     fetchUserProfile();
-  }, []);
+  }, [navigate]);
 
   const handleLogout = async () => {
+    console.log('Attempting to sign out...');
     try {
       await logout();
-      setUser(null);
-      setIsDropdownOpen(false);
+      console.log('Logout successful');
     } catch (error) {
       console.error('Logout failed:', error);
+    } finally {
+      console.log('Navigating to home page...');
+      setUser(null);
+      setIsDropdownOpen(false);
+      navigate('/', { replace: true });
     }
+  };
+
+  const handleProfileClick = () => {
+    navigate("/profile");
+  };
+
+  const handleUpgradeClick = () => {
+    navigate("/upgrade");
   };
 
   return (
@@ -107,12 +126,20 @@ export function Header() {
               </button>
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-[#1C1F33] rounded-md shadow-lg z-10">
-                  <div className="p-4 border-b border-gray-700">
-                    <p className="text-sm text-white">
-                      {user.first_name} {user.last_name}
-                    </p>
-                    <p className="text-xs text-gray-400">{user.email}</p>
-                  </div>
+                  <button
+                    onClick={handleProfileClick}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#2b8bb1] hover:text-white flex items-center gap-2"
+                  >
+                    <User size={16} />
+                    Thông tin cá nhân
+                  </button>
+                  <button
+                    onClick={handleUpgradeClick}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#2b8bb1] hover:text-white flex items-center gap-2"
+                  >
+                    <User size={16} />
+                    Nâng cấp tài khoản
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#2b8bb1] hover:text-white flex items-center gap-2"
