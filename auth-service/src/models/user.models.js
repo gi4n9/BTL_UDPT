@@ -8,6 +8,11 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true, maxlength: 255 },
   profile_image: { type: String, maxlength: 255 },
   bio: { type: String },
+  role: {
+    type: String,
+    enum: ["admin", "user", "artist"],
+    default: "user",
+  },
   status: {
     type: String,
     enum: ["VERIFY", "ACTIVE", "BLOCKED"],
