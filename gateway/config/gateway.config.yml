@@ -20,6 +20,8 @@ serviceEndpoints:
     url: 'http://localhost:3002'
   authService:
     url: 'http://localhost:3001'
+  songService:
+    url: 'http://localhost:3003'
 policies:
   - basic-auth
   - cors
@@ -53,4 +55,12 @@ pipelines:
       - proxy:
           - action:
               serviceEndpoint: authService
+              changeOrigin: true
+  songPipeline:
+    apiEndpoints:
+      - song
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: songService
               changeOrigin: true
