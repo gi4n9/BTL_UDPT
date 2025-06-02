@@ -21,9 +21,27 @@ const deleteSong = async (req, res) => {
 };
 
 const createSong = async (req, res) => {
+  console.log("reqbody:", req.body);
+  console.log(req.user);
+  console.log("reqfile:", req.file);
   try {
-    const song = await songService.createSong(req.body);
-    res.status(201).json(song);
+    const { title, genre, description } = req.body;
+    const artistId = req.user.id;
+    console.log(artistId);
+    const file = req.file;
+
+    if (!file || !title || !artistId) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const song = await songService.createSong(
+      file,
+      title,
+      genre,
+      description,
+      artistId
+    );
+    res.status(201).json({ message: "create song suc" });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
