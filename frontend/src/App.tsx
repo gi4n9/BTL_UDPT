@@ -12,6 +12,8 @@ import { Footer } from './components/Footer';
 import { MusicPlayer } from './components/MusicPlayer';
 import ProfilePage from './pages/ProfilePage';
 import UpgradePage from './pages/UpgradePage';
+import AdminPage from './pages/AdminPage';
+import UserManagementPage from './pages/UserManagementPage';
 
 export function App() {
   return (
@@ -37,6 +39,8 @@ export function App() {
             />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/upgrade" element={<UpgradePage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/users" element={<UserManagementPage />} />
           </Routes>
           <MusicPlayer />
         </div>

@@ -5,8 +5,9 @@
     "start:auth": "cd auth-service && npm start",
     "start:user": "cd user-service && npm start",
     "start:gateway": "cd gateway && npm start",
+    "start:admin": "cd admin-service && npm start",
     "start:frontend": "cd frontend && npm run dev",
-    "start": "concurrently \"npm run start:auth\" \"npm run start:user\" \"npm run start:gateway\" \"npm run start:frontend\""
+    "start": "concurrently \"npm run start:auth\" \"npm run start:user\" \"npm run start:gateway\" \"npm run start:admin\" \"npm run start:frontend\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -6,20 +6,25 @@ admin:
 apiEndpoints:
   api:
     host: localhost
-    paths: '/ip'
+    paths: "/ip"
   user:
     host: localhost
-    paths: '/user/*'
+    paths: "/user/*"
   auth:
     host: localhost
-    paths: '/auth/*'
+    paths: "/auth/*"
+  admin:
+    host: localhost
+    paths: "/admin/*"
 serviceEndpoints:
   httpbin:
-    url: 'https://httpbin.org'
+    url: "https://httpbin.org"
   userService:
-    url: 'http://localhost:3002'
+    url: "http://localhost:3002"
   authService:
-    url: 'http://localhost:3001'
+    url: "http://localhost:3001"
+  adminService:
+    url: "http://localhost:3004"
 policies:
   - basic-auth
   - cors
@@ -53,4 +58,12 @@ pipelines:
       - proxy:
           - action:
               serviceEndpoint: authService
+              changeOrigin: true
+  adminPipeline:
+    apiEndpoints:
+      - admin
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: adminService
               changeOrigin: true
