@@ -12,7 +12,7 @@ import { MusicPlayer } from './components/MusicPlayer';
 export function App() {
   return <div className="flex w-full min-h-screen bg-[#171A2C] text-white relative">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col pl-14">
         <Header />
         <main className="flex-1 overflow-y-auto px-6 pb-24">
           <HeroSection />

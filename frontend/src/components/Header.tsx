@@ -1,6 +1,19 @@
-import React, { useState } from 'react';
-import { Search, Globe } from 'lucide-react';
-import { AuthModal } from './AuthModal';
+import React, { useState, useEffect } from 'react';
+import { Search, Globe, User, LogOut } from 'lucide-react';
+import { AuthModal } from './AuthModal.tsx';
+import { getUserProfile, logout } from '../../service/auth-service.ts';
+
+interface UserProfile {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  status: 'VERIFY' | 'ACTIVE' | 'BLOCKED';
+  profile_image?: string;
+  bio?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export function Header() {
   const [authModal, setAuthModal] = useState<{
@@ -10,13 +23,42 @@ export function Header() {
     isOpen: false,
     mode: 'login'
   });
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Hàm để chuyển đổi mode giữa 'login' và 'register'
   const toggleMode = () => {
     setAuthModal({
       ...authModal,
       mode: authModal.mode === 'login' ? 'register' : 'login'
     });
+  };
+
+  const fetchUserProfile = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const userData = await getUserProfile();
+        setUser(userData);
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        localStorage.removeItem('token');
+        setUser(null);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setUser(null);
+      setIsDropdownOpen(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   return (
@@ -45,40 +87,76 @@ export function Header() {
             <span>Languages</span>
             <Globe size={16} className="ml-1" />
           </div>
-          <button
-            className="bg-[#3AA5D1] text-white py-1 px-5 rounded-full text-sm mx-1"
-            onClick={() =>
-              setAuthModal({
-                isOpen: true,
-                mode: 'register'
-              })
-            }
-          >
-            Register
-          </button>
-          <button
-            className="bg-[#5BCEFA] text-white py-1 px-5 rounded-full text-sm mx-1"
-            onClick={() =>
-              setAuthModal({
-                isOpen: true,
-                mode: 'login'
-              })
-            }
-          >
-            Login
-          </button>
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center focus:outline-none"
+              >
+                {user.profile_image ? (
+                  <img
+                    src={user.profile_image}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-full"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-[#3AA5D1] flex items-center justify-center text-white">
+                    {user.first_name.charAt(0)}
+                  </div>
+                )}
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-[#1C1F33] rounded-md shadow-lg z-10">
+                  <div className="p-4 border-b border-gray-700">
+                    <p className="text-sm text-white">
+                      {user.first_name} {user.last_name}
+                    </p>
+                    <p className="text-xs text-gray-400">{user.email}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#2b8bb1] hover:text-white flex items-center gap-2"
+                  >
+                    <LogOut size={16} />
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <button
+                className="bg-[#3AA5D1] text-white py-1 px-5 rounded-full text-sm mx-1"
+                onClick={() =>
+                  setAuthModal({
+                    isOpen: true,
+                    mode: 'register'
+                  })
+                }
+              >
+                Register
+              </button>
+              <button
+                className="bg-[#5BCEFA] text-white py-1 px-5 rounded-full text-sm mx-1"
+                onClick={() =>
+                  setAuthModal({
+                    isOpen: true,
+                    mode: 'login'
+                  })
+                }
+              >
+                Login
+              </button>
+            </>
+          )}
         </div>
       </header>
       <AuthModal
         isOpen={authModal.isOpen}
         mode={authModal.mode}
-        onClose={() =>
-          setAuthModal({
-            ...authModal,
-            isOpen: false
-          })
-        }
+        onClose={() => setAuthModal({ ...authModal, isOpen: false })}
         onToggleMode={toggleMode}
+        onLoginSuccess={fetchUserProfile}
       />
     </>
   );

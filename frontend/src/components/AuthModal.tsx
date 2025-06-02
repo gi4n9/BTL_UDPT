@@ -7,9 +7,10 @@ interface AuthModalProps {
   onClose: () => void;
   mode: 'login' | 'register';
   onToggleMode: () => void;
+  onLoginSuccess?: () => void;
 }
 
-export function AuthModal({ isOpen, onClose, mode, onToggleMode }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, mode, onToggleMode, onLoginSuccess }: AuthModalProps) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -20,44 +21,55 @@ export function AuthModal({ isOpen, onClose, mode, onToggleMode }: AuthModalProp
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
-  setSuccessMessage('');
-  console.log('Submitting form, mode:', mode);
-  console.log('Password:', password, 'Confirm Password:', confirmPassword); // Debug
-  try {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+    console.log('Submitting form, mode:', mode);
+    console.log('Data sent:', { firstName, lastName, email, password, confirmPassword });
     if (mode === 'register') {
-      const data = await register(firstName, lastName, email, password, confirmPassword);
-      console.log('Register success:', data);
-      setSuccessMessage('Đăng ký thành công!');
-      console.log('Setting success message');
-      const timeout = setTimeout(() => {
-        console.log('Running setTimeout, toggling mode');
-        onToggleMode();
-        setSuccessMessage('');
-        setFirstName('');
-        setLastName('');
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-      }, 2000);
-      return () => clearTimeout(timeout);
-    } else {
-      const data = await login(email, password);
-      localStorage.setItem('token', data.token);
-      console.log('Login success:', data);
-      onClose();
+      if (!firstName || !lastName || !email || !password || !confirmPassword) {
+        setError('All fields are required');
+        return;
+      }
+    } else if (mode === 'login') {
+      if (!email || !password) {
+        setError('Email and password are required');
+        return;
+      }
     }
-  } catch (error) {
-    console.log('Error occurred:', error);
-    if (error instanceof Error) {
-      setError(error.message);
-    } else {
-      setError('Đã xảy ra lỗi không xác định');
+    try {
+      if (mode === 'register') {
+        const data = await register(firstName, lastName, email, password, confirmPassword);
+        console.log('Register success:', data);
+        setSuccessMessage('Đăng ký thành công!');
+        const timeout = setTimeout(() => {
+          console.log('Running setTimeout, toggling mode');
+          onToggleMode();
+          setSuccessMessage('');
+          setFirstName('');
+          setLastName('');
+          setEmail('');
+          setPassword('');
+          setConfirmPassword('');
+        }, 2000);
+        return () => clearTimeout(timeout);
+      } else {
+        const data = await login(email, password);
+        localStorage.setItem('token', data.token);
+        console.log('Login success:', data);
+        onClose();
+        if (onLoginSuccess) onLoginSuccess(); // Gọi callback sau khi đăng nhập
+      }
+    } catch (error) {
+      console.log('Error occurred:', error);
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Đã xảy ra lỗi không xác định');
+      }
     }
-  }
-};
+  };
 
   if (!isOpen) return null;
 
@@ -89,14 +101,14 @@ const handleSubmit = async (e: React.FormEvent) => {
                 placeholder="Enter Your First Name"
                 className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={(e) => setFirstName(e.target.value.trim())}
               />
               <input
                 type="text"
                 placeholder="Enter Your Last Name"
                 className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={(e) => setLastName(e.target.value.trim())}
               />
             </>
           )}
@@ -105,7 +117,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             placeholder="Enter Your Email"
             className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.trim())}
           />
           <div className="relative">
             <input
@@ -113,7 +125,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               placeholder="Enter Password"
               className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white pr-10"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value.trim())}
             />
             <button
               type="button"
@@ -130,7 +142,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 placeholder="Confirm Password"
                 className="w-full bg-[#171A2C] rounded-md px-4 py-2 text-sm text-white pr-10"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => setConfirmPassword(e.target.value.trim())}
               />
               <button
                 type="button"

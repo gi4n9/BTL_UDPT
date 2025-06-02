@@ -29,7 +29,7 @@ export function Sidebar() {
       setActiveSection(sectionId);
     }
   };
-  return <div className={`${isExpanded ? 'w-64' : 'w-14'} bg-[#1C1F33] flex flex-col py-4 transition-all duration-300 ease-in-out sticky top-0 h-screen`} onMouseEnter={() => setIsExpanded(true)} onMouseLeave={() => setIsExpanded(false)}>
+  return <div className={`${isExpanded ? 'w-64' : 'w-14'} bg-[#1C1F33] flex flex-col py-4 transition duration-300 ease-in-out fixed top-0 h-screen z-50`} onMouseEnter={() => setIsExpanded(true)} onMouseLeave={() => setIsExpanded(false)}>
       <div className={`flex items-center px-4 mb-8 ${isExpanded ? 'justify-start' : 'justify-center'}`}>
         <div className="h-10 w-10 rounded-full bg-[#3AA5D1] flex items-center justify-center text-white font-bold shrink-0">
           M

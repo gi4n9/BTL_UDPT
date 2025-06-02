@@ -20,6 +20,18 @@ interface LoginResponse {
   };
 }
 
+interface UserProfile {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  status: "VERIFY" | "ACTIVE" | "BLOCKED";
+  profile_image?: string;
+  bio?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const register = async (
   firstName: string,
   lastName: string,
@@ -27,6 +39,13 @@ export const register = async (
   password: string,
   confirmPassword: string
 ): Promise<RegisterResponse> => {
+  console.log("Register called with:", {
+    firstName,
+    lastName,
+    email,
+    password,
+    confirmPassword,
+  });
   if (password !== confirmPassword) {
     throw new Error("Passwords do not match");
   }
@@ -42,6 +61,7 @@ export const register = async (
     }),
   });
   const data = await response.json();
+  console.log("Response from server:", data);
   if (!response.ok) {
     throw new Error(data.message || "Registration failed");
   }
@@ -62,4 +82,30 @@ export const login = async (
     throw new Error(data.message || "Login failed");
   }
   return data;
+};
+
+export const getUserProfile = async (): Promise<UserProfile> => {
+  const token = localStorage.getItem("token");
+  if (!token) throw new Error("No token found");
+
+  const response = await fetch("http://localhost:3001/auth/me", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch user profile");
+  }
+  return data;
+};
+
+export const logout = async (): Promise<void> => {
+  localStorage.removeItem("token");
+  await fetch("http://localhost:3001/auth/logout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
 };

@@ -9,6 +9,8 @@ const register = async (
   password,
   confirmPassword
 ) => {
+  console.log(password);
+  console.log(confirmPassword);
   if (password !== confirmPassword) {
     throw new Error("Passwords do not match");
   }
@@ -31,7 +33,13 @@ const register = async (
   await user.save();
   return {
     message: "User registered successfully",
-    user: { id: user.id, email: user.email, status: user.status },
+    user: {
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      status: user.status,
+    },
   };
 };
 
@@ -49,8 +57,30 @@ const login = async (email, password) => {
   );
   return {
     token,
-    user: { id: user.id, email: user.email, status: user.status },
+    user: {
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      status: user.status,
+    },
   };
 };
 
-module.exports = { register, login };
+const getUserById = async (userId) => {
+  const user = await User.findOne({ id: userId });
+  if (!user) throw new Error("User not found");
+  return {
+    id: user.id,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
+    status: user.status,
+    profile_image: user.profile_image,
+    bio: user.bio,
+    created_at: user.created_at,
+    updated_at: user.updated_at,
+  };
+};
+
+module.exports = { register, login, getUserById };
