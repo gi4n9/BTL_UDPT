@@ -9,8 +9,6 @@ const register = async (
   password,
   confirmPassword
 ) => {
-  console.log(password);
-  console.log(confirmPassword);
   if (password !== confirmPassword) {
     throw new Error("Passwords do not match");
   }
