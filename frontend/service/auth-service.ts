@@ -49,7 +49,7 @@ export const register = async (
   if (password !== confirmPassword) {
     throw new Error("Passwords do not match");
   }
-  const response = await fetch("http://localhost:3001/auth/register", {
+  const response = await fetch("/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -72,7 +72,7 @@ export const login = async (
   email: string,
   password: string
 ): Promise<LoginResponse> => {
-  const response = await fetch("http://localhost:3001/auth/login", {
+  const response = await fetch("/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -88,7 +88,7 @@ export const getUserProfile = async (): Promise<UserProfile> => {
   const token = localStorage.getItem("token");
   if (!token) throw new Error("No token found");
 
-  const response = await fetch("http://localhost:3001/auth/me", {
+  const response = await fetch("/auth/me", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -104,7 +104,7 @@ export const getUserProfile = async (): Promise<UserProfile> => {
 
 export const logout = async (): Promise<void> => {
   localStorage.removeItem("token");
-  await fetch("http://localhost:3001/auth/logout", {
+  await fetch("/auth/logout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   });
