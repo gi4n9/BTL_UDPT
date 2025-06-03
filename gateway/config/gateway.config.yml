@@ -25,7 +25,6 @@ serviceEndpoints:
     url: 'http://localhost:3001'
   songService:
     url: 'http://localhost:3003'
-    url: "http://localhost:3001"
   adminService:
     url: "http://localhost:3004"
 policies:
