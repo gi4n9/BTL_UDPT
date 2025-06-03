@@ -1,74 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, Heart, Download } from 'lucide-react';
-import axios from 'axios';
-
-interface Song {
-  id: number;
-  title: string;
-  artistId: number;
-  fileUrl: string;
-  cover?: string;
-  artistName?: string;
-}
+import React, { useState, useRef, useEffect } from 'react';
+import { Song } from '../service/songService';
 
 interface MusicPlayerProps {
-  songId?: number;
+  currentSong: Song | null;
+  onNext?: () => void;
+  onPrevious?: () => void;
 }
 
-export function MusicPlayer({ songId }: MusicPlayerProps) {
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+const MusicPlayer: React.FC<MusicPlayerProps> = ({ currentSong, onNext, onPrevious }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Fetch chi tiết bài hát khi songId thay đổi
   useEffect(() => {
-    const fetchSongById = async () => {
-      if (songId) {
-        try {
-          const response = await axios.get(`http://localhost:3003/songs/${songId}`);
-          setCurrentSong(response.data.song);
-          setError(null);
-          setIsPlaying(false); // Reset trạng thái phát khi đổi bài
-          setCurrentTime(0); // Reset thời gian hiện tại
-        } catch (error) {
-          console.error('Lỗi khi lấy bài hát:', error);
-          setError('Không thể tải bài hát');
-          setCurrentSong(null);
-        }
-      } else {
-        setCurrentSong(null);
-        setError(null);
-        setIsPlaying(false);
-        setCurrentTime(0);
-      }
-    };
-    fetchSongById();
-  }, [songId]);
-
-  // Gán fileUrl vào audio và xử lý khi bài hát thay đổi
-  useEffect(() => {
-    if (audioRef.current && currentSong?.fileUrl) {
+    if (currentSong && audioRef.current) {
       audioRef.current.src = currentSong.fileUrl;
-      audioRef.current.load(); // Tải lại nguồn audio
-      audioRef.current
-        .play()
-        .then(() => {
-          if (isPlaying) {
-            setIsPlaying(true);
-          }
-        })
-        .catch((err) => {
-          console.error('Lỗi khi phát bài hát:', err);
-          setError('Không thể phát bài hát');
-          setIsPlaying(false);
-        });
+      if (isPlaying) {
+        audioRef.current.play();
+      }
     }
   }, [currentSong]);
 
-  // Handle audio events
+  const togglePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
   const handleTimeUpdate = () => {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
@@ -77,127 +41,99 @@ export function MusicPlayer({ songId }: MusicPlayerProps) {
 
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
-      setDuration(audioRef.current.duration || 0);
+      setDuration(audioRef.current.duration);
     }
   };
 
-  const handleError = () => {
-    setError('Lỗi khi tải bài hát');
-    setIsPlaying(false);
-  };
-
-  // Play or pause the song
-  const togglePlayPause = () => {
-    if (audioRef.current && currentSong?.fileUrl) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current
-          .play()
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch((err) => {
-            console.error('Lỗi khi phát bài hát:', err);
-            setError('Không thể phát bài hát');
-          });
-      }
-      setIsPlaying(!isPlaying);
-    } else {
-      setError('Không có bài hát để phát');
-    }
-  };
-
-  // Update progress bar
-  const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = parseFloat(e.target.value);
     if (audioRef.current) {
-      const newTime = parseFloat(e.target.value);
-      audioRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
     }
   };
 
-  // Format time for display
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
-
-  // Fallback song data
-  const displaySong = currentSong || {
-    title: 'Không có bài hát',
-    artistName: 'Không xác định',
-    fileUrl: '',
-    cover: 'https://images.unsplash.com/photo-1494232410401-ad00d5433cfa?ixlib=rb-1.2.1&auto=format&fit=crop&w=50&h=50&q=80',
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#1C1F33] border-t border-gray-700 px-4 py-3 flex items-center z-50">
-      {error ? (
-        <div className="text-red-500 text-sm">{error}</div>
-      ) : (
-        <>
-          <div className="flex items-center w-1/4">
-            <img
-              src={displaySong.cover}
-              alt={displaySong.title}
-              className="w-12 h-12 rounded-md mr-3"
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white p-4">
+      <audio
+        ref={audioRef}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={() => setIsPlaying(false)}
+      />
+      
+      <div className="max-w-4xl mx-auto flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 rounded bg-gray-800 flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-semibold">{currentSong?.title || 'No song selected'}</h3>
+            <p className="text-sm text-gray-400">Artist ID: {currentSong?.artistId}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center space-y-2">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onPrevious}
+              className="p-2 hover:bg-gray-800 rounded-full"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <button
+              onClick={togglePlayPause}
+              className="p-3 bg-white text-gray-900 rounded-full hover:bg-gray-200"
+            >
+              {isPlaying ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </button>
+
+            <button
+              onClick={onNext}
+              className="p-2 hover:bg-gray-800 rounded-full"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-2 w-full max-w-md">
+            <span className="text-sm">{formatTime(currentTime)}</span>
+            <input
+              type="range"
+              min={0}
+              max={duration}
+              value={currentTime}
+              onChange={handleSeek}
+              className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
             />
-            <div>
-              <h4 className="text-sm font-medium">{displaySong.title}</h4>
-              <p className="text-xs text-gray-400">{displaySong.artistName || 'Không xác định'}</p>
-            </div>
+            <span className="text-sm">{formatTime(duration)}</span>
           </div>
-          <div className="flex-1 flex flex-col items-center">
-            <div className="flex items-center gap-4">
-              <button className="text-gray-400 hover:text-white" disabled>
-                <SkipBack size={20} />
-              </button>
-              <button
-                className="w-8 h-8 rounded-full bg-[#3AA5D1] flex items-center justify-center"
-                onClick={togglePlayPause}
-                disabled={!currentSong}
-              >
-                {isPlaying ? <Pause size={18} /> : <Play size={18} />}
-              </button>
-              <button className="text-gray-400 hover:text-white" disabled>
-                <SkipForward size={20} />
-              </button>
-            </div>
-            <div className="w-full max-w-md flex items-center gap-2 mt-1">
-              <span className="text-xs text-gray-400">{formatTime(currentTime)}</span>
-              <input
-                type="range"
-                min="0"
-                max={duration || 0}
-                value={currentTime}
-                onChange={handleProgressChange}
-                className="flex-1 h-1 bg-gray-700 rounded-full"
-                disabled={!currentSong}
-              />
-              <span className="text-xs text-gray-400">{formatTime(duration)}</span>
-            </div>
-          </div>
-          <div className="w-1/4 flex items-center justify-end gap-4">
-            <button className="text-gray-400 hover:text-white" disabled>
-              <Volume2 size={20} />
-            </button>
-            <button className="text-gray-400 hover:text-white" disabled>
-              <Heart size={20} />
-            </button>
-            <button className="text-gray-400 hover:text-white" disabled>
-              <Download size={20} />
-            </button>
-          </div>
-          <audio
-            ref={audioRef}
-            onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={handleLoadedMetadata}
-            onError={handleError}
-          />
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default MusicPlayer;

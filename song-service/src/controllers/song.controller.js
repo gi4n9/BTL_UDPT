@@ -9,6 +9,16 @@ const getSongs = async (req, res) => {
   }
 };
 
+const getSongByArtistId = async (req, res) => {
+  try {
+    const { artistId } = req.params;
+    const songs = await songService.getSongByArtistId(artistId);
+    res.status(200).json(songs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const getSongById = async (req, res) => {
   console.log("req.param.id:", req.params.id);
   try {
@@ -54,10 +64,10 @@ const createSong = async (req, res) => {
       description,
       artistId
     );
-    res.status(201).json({ message: "create song suc" });
+    res.status(201).json({ success: true, data: song });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
-module.exports = { getSongs, getSongById, deleteSong, createSong };
+module.exports = { getSongs, getSongById, getSongByArtistId, deleteSong, createSong };

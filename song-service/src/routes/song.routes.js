@@ -8,6 +8,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/", songController.getSongs);
 router.get("/:id", songController.getSongById);
+router.get("/artist/:artistId", songController.getSongByArtistId);
 router.post(
   "/",
   authenticateToken,

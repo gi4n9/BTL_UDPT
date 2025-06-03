@@ -1,56 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import axios from 'axios';
+import { useMusicPlayer } from '../contexts/MusicPlayerContext';
+import { songService, Song } from '../service/songService';
 
-interface Song {
-  id: number;
-  title: string;
-  artistId: number;
-  cover?: string;
-  artistName?: string;
-}
-
-interface NewReleasesProps {
-  onSongSelect: (songId: number) => void;
-}
-
-export function NewReleases({ onSongSelect }: NewReleasesProps) {
+export function NewReleases() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { playSong } = useMusicPlayer();
 
-  // Fetch danh sách bài hát và thông tin artist
   useEffect(() => {
-    const fetchSongsAndArtists = async () => {
+    const fetchSongs = async () => {
       try {
-        // Lấy danh sách bài hát từ API /songs
-        const songsResponse = await axios.get('http://localhost:3003/songs');
-        const songsData = songsResponse.data;
-
-        // Lấy thông tin artist cho mỗi bài hát
-        const songsWithArtist = await Promise.all(
-          songsData.map(async (song: Song) => {
-            try {
-              const artistResponse = await axios.get(
-                `http://localhost:3004/artist/profile/${song.artistId}`
-              );
-              const artistData = artistResponse.data.data;
-              const artistName = `${artistData.first_name} ${artistData.last_name}`;
-              return { ...song, artistName };
-            } catch (artistError) {
-              console.error(`Lỗi khi lấy artist ${song.artistId}:`, artistError);
-              return { ...song, artistName: 'Không xác định' };
-            }
-          })
-        );
-
-        setSongs(songsWithArtist);
+        const songsData = await songService.getAllSongs();
+        setSongs(songsData);
         setError(null);
       } catch (error) {
-        console.error('Lỗi khi lấy danh sách bài hát:', error);
-        setError('Không thể tải danh sách bài hát');
+        console.error('Error fetching songs:', error);
+        setError('Could not load songs');
       }
     };
-    fetchSongsAndArtists();
+    fetchSongs();
   }, []);
 
   return (
@@ -70,26 +39,23 @@ export function NewReleases({ onSongSelect }: NewReleasesProps) {
             {songs.length > 0 ? (
               songs.map((song) => (
                 <div
-                  key={song.id}
+                  key={song._id}
                   className="flex items-center space-x-3 bg-[#1C1F33] p-2 rounded-lg min-w-[300px] cursor-pointer hover:bg-[#2A2E4A]"
-                  onClick={() => onSongSelect(song.id)}
+                  onClick={() => playSong(song)}
                 >
-                  <img
-                    src={
-                      song.cover ||
-                      'https://images.unsplash.com/photo-1494232410401-ad00d5433cfa?ixlib=rb-1.2.1&auto=format&fit=crop&w=50&h=50&q=80'
-                    }
-                    alt={song.title}
-                    className="w-12 h-12 rounded-md"
-                  />
+                  <div className="w-12 h-12 rounded-md bg-gray-800 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                  </div>
                   <div className="flex-1">
                     <h3 className="text-sm font-medium">{song.title}</h3>
-                    <p className="text-xs text-gray-400">{song.artistName || 'Không xác định'}</p>
+                    <p className="text-xs text-gray-400">Artist ID: {song.artistId}</p>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-gray-400 text-sm">Không có bài hát nào</div>
+              <div className="text-gray-400 text-sm">No songs available</div>
             )}
           </div>
           <button className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/30 p-1 rounded-full z-10">

@@ -6,7 +6,7 @@ const songSchema = new mongoose.Schema({
   duration: { type: String },
   artistId: { type: Number, required: true },
   albumId: { type: Number },
-  fileUrl: { type: String, maxlength: 255 },
+  fileUrl: { type: String, maxlength: 1000 },
   views: { type: Number, default: 0 },
   genres: [{ type: String }],
   createdAt: { type: Date, default: Date.now },

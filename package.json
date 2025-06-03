@@ -10,7 +10,6 @@
     "start:song": "cd song-service && npm run dev",
     "start:artist": "cd artist-service && npm run dev",
     "start": "concurrently \"npm run start:auth\" \"npm run start:user\" \"npm run start:gateway\" \"npm run start:frontend\" \"npm run start:song\" \" npm run start:artist\""
-    "start": "concurrently \"npm run start:auth\" \"npm run start:user\" \"npm run start:gateway\" \"npm run start:frontend\" \"npm run start:song\" \"npm run start:admin\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

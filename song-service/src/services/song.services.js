@@ -1,8 +1,13 @@
 const { Song, getNextSequence } = require("../models/song.models");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 require("dotenv").config();
 
-// Cấu hình S3Client cho Cloudfly S3
+// ✅ Khởi tạo S3Client cho Cloudfly
 const s3Client = new S3Client({
   credentials: {
     accessKeyId: process.env.CLOUD_ACCESS_KEY,
@@ -16,92 +21,84 @@ const s3Client = new S3Client({
 class SongService {
   async getSongs() {
     try {
-      const songs = await Song.find();
-      return songs;
+      return await Song.find();
     } catch (error) {
       throw new Error("Lỗi khi lấy danh sách bài hát");
     }
   }
 
+  async getSongByArtistId(artistId) {
+    try {
+      return await Song.find({ artistId });
+    } catch (error) {
+      throw new Error("Lỗi khi lấy bài hát theo artistId");
+    }
+  }
+
   async getSongById(songId) {
     try {
-      const song = await Song.findOne({ id: parseInt(songId) });
-      return song;
+      return await Song.findOne({ id: parseInt(songId) });
     } catch (error) {
-      throw new Error("Không thể lấy bài hát theo Id!!");
+      throw new Error("Không thể lấy bài hát theo Id");
     }
   }
 
   async createSong(file, title, genre, description, artistId) {
     try {
-      // Kiểm tra các trường bắt buộc
       if (!file || !title || !artistId) {
         throw new Error("Thiếu các trường bắt buộc: file, title, artistId");
       }
 
-      // Tạo key cho S3
+      // Tạo key đơn giản cho file
       const encodedFileName = encodeURIComponent(file.originalname);
       const key = `songs/${Date.now()}_${encodedFileName}`;
 
-      // Cấu hình tham số cho S3
-      const params = {
+      // Upload file lên Cloudfly (private)
+      const uploadParams = {
         Bucket: process.env.CLOUD_BUCKET,
         Key: key,
         Body: file.buffer,
-        ContentType: file.mimetype,
+        ContentType: file.mimetype || "audio/mpeg",
+        // ❌ KHÔNG set ACL: public-read
       };
 
-      // Debug: In ra các giá trị
-      console.log("CLOUD_ENDPOINT:", process.env.CLOUD_ENDPOINT);
-      console.log("CLOUD_BUCKET:", process.env.CLOUD_BUCKET);
-      console.log("S3 Params:", params);
+      await s3Client.send(new PutObjectCommand(uploadParams));
+      console.log("📤 Upload thành công:", key);
 
-      // Tải file lên Cloudfly S3
-      const command = new PutObjectCommand(params);
-      await s3Client.send(command);
+      // Tạo signed URL có thời hạn tối đa 7 ngày
+      const signedUrl = await getSignedUrl(
+        s3Client,
+        new GetObjectCommand({
+          Bucket: process.env.CLOUD_BUCKET,
+          Key: key,
+        }),
+        { expiresIn: 604800 } // 7 ngày
+      );
 
-      // Tạo URL công khai cho file
-      const generatedSongUrl = `${process.env.CLOUD_ENDPOINT}/${process.env.CLOUD_BUCKET}/${key}`;
-
-      // Kiểm tra URL hợp lệ
-      try {
-        new URL(generatedSongUrl);
-        console.log("Song URL:", generatedSongUrl);
-      } catch (urlError) {
-        console.error("Invalid URL:", generatedSongUrl, urlError);
-        throw new Error(`URL không hợp lệ: ${generatedSongUrl}`);
-      }
-
-      // Dữ liệu bài hát để lưu vào MongoDB
+      // Lưu thông tin bài hát
       const songData = {
-        id: await getNextSequence(), // Thêm ID tùy chỉnh
+        id: await getNextSequence(),
         title,
         genre,
         description,
-        artistId: artistId,
-        fileUrl: generatedSongUrl,
+        artistId,
+        fileUrl: signedUrl,
         releaseDate: new Date(),
       };
 
-      // Debug: In ra dữ liệu bài hát
-      console.log("Song Data:", songData);
-
-      // Lưu vào MongoDB
       const newSong = await Song.create(songData);
       return newSong;
     } catch (error) {
-      console.error("Create Song Error:", error);
+      console.error("❌ Lỗi tạo bài hát:", error);
       throw new Error(`Lỗi khi tạo bài hát: ${error.message}`);
     }
   }
 
   async deleteSong(songId) {
     try {
-      const deletedSong = await Song.findByIdAndDelete(songId);
-      if (!deletedSong) {
-        throw new Error("Không tìm thấy bài hát");
-      }
-      return deletedSong;
+      const deleted = await Song.findByIdAndDelete(songId);
+      if (!deleted) throw new Error("Không tìm thấy bài hát");
+      return deleted;
     } catch (error) {
       throw new Error(`Lỗi khi xóa bài hát: ${error.message}`);
     }
