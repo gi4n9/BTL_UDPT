@@ -19,7 +19,6 @@ apiEndpoints:
   artist:
     host: localhost
     paths: '/artist/*'
-    paths: "/auth/*"
   admin:
     host: localhost
     paths: "/admin/*"

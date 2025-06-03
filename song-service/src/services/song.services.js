@@ -59,11 +59,10 @@ class SongService {
         Key: key,
         Body: file.buffer,
         ContentType: file.mimetype || "audio/mpeg",
-        // ❌ KHÔNG set ACL: public-read
       };
 
       await s3Client.send(new PutObjectCommand(uploadParams));
-      console.log("📤 Upload thành công:", key);
+      console.log("Upload thành công:", key);
 
       // Tạo signed URL có thời hạn tối đa 7 ngày
       const signedUrl = await getSignedUrl(
@@ -72,7 +71,7 @@ class SongService {
           Bucket: process.env.CLOUD_BUCKET,
           Key: key,
         }),
-        { expiresIn: 604800 } // 7 ngày
+        { expiresIn: 604800 }
       );
 
       // Lưu thông tin bài hát
@@ -89,7 +88,7 @@ class SongService {
       const newSong = await Song.create(songData);
       return newSong;
     } catch (error) {
-      console.error("❌ Lỗi tạo bài hát:", error);
+      console.error("Lỗi tạo bài hát:", error);
       throw new Error(`Lỗi khi tạo bài hát: ${error.message}`);
     }
   }
