@@ -201,15 +201,6 @@ const uploadAvatar = async (artistId, file) => {
   }
 };
 
-// Kiểm tra user có phải artist không (utility function)
-const isArtist = async (userId) => {
-  try {
-    return await userRepository.isArtist(userId);
-  } catch (err) {
-    return false;
-  }
-};
-
 module.exports = {
   // Public functions
   getArtists,
@@ -221,7 +212,4 @@ module.exports = {
   updateArtist,
   changePassword,
   uploadAvatar,
-
-  // Utility functions
-  isArtist,
 };

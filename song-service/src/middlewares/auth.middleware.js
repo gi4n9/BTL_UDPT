@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const userService = require("../services/user.service");
 
 // Middleware để decode token và lấy userId, set role
 const authenticateToken = async (req, res, next) => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -16,6 +16,12 @@ import AdminPage from './pages/AdminPage';
 import UserManagementPage from './pages/UserManagementPage';
 
 export function App() {
+  const [selectedSongId, setSelectedSongId] = useState<number | undefined>(undefined);
+
+  const handleSongSelect = (songId: number) => {
+    setSelectedSongId(songId);
+  };
+
   return (
     <Router>
       <div className="flex w-full min-h-screen bg-[#171A2C] text-white relative">
@@ -28,7 +34,7 @@ export function App() {
               element={
                 <main className="flex-1 overflow-y-auto px-6 pb-24">
                   <HeroSection />
-                  <NewReleases />
+                  <NewReleases onSongSelect={handleSongSelect} />
                   <RecentlyPlayed />
                   <WeeklyTop />
                   <FeaturedAlbums />
@@ -42,7 +48,7 @@ export function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/users" element={<UserManagementPage />} />
           </Routes>
-          <MusicPlayer />
+          <MusicPlayer songId={selectedSongId} />
         </div>
       </div>
     </Router>
