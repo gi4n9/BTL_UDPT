@@ -23,7 +23,16 @@ class SongService {
     }
   }
 
-  async createSong(file, title, genre, description, artistId, songUrl) {
+  async getSongById(songId) {
+    try {
+      const song = await Song.findOne({ id: parseInt(songId) });
+      return song;
+    } catch (error) {
+      throw new Error("Không thể lấy bài hát theo Id!!");
+    }
+  }
+
+  async createSong(file, title, genre, description, artistId) {
     try {
       // Kiểm tra các trường bắt buộc
       if (!file || !title || !artistId) {
@@ -70,7 +79,7 @@ class SongService {
         genre,
         description,
         artistId: artistId,
-        fileUrl: songUrl || generatedSongUrl, // Sử dụng songUrl từ input hoặc generatedSongUrl
+        fileUrl: generatedSongUrl,
         releaseDate: new Date(),
       };
 

@@ -9,6 +9,19 @@ const getSongs = async (req, res) => {
   }
 };
 
+const getSongById = async (req, res) => {
+  console.log("req.param.id:", req.params.id);
+  try {
+    const { id } = req.params;
+    console.log(id);
+    const song = await songService.getSongById(id);
+    if (!song) throw new Error("Song not found");
+    res.status(200).json({ message: "get song by id success", song });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const deleteSong = async (req, res) => {
   try {
     const { songId } = req.params;
@@ -47,4 +60,4 @@ const createSong = async (req, res) => {
   }
 };
 
-module.exports = { getSongs, deleteSong, createSong };
+module.exports = { getSongs, getSongById, deleteSong, createSong };

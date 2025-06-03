@@ -13,6 +13,12 @@ apiEndpoints:
   auth:
     host: localhost
     paths: '/auth/*'
+  song:
+    host: localhost
+    paths: '/songs/*'
+  artist:
+    host: localhost
+    paths: '/artist/*'
 serviceEndpoints:
   httpbin:
     url: 'https://httpbin.org'
@@ -22,6 +28,8 @@ serviceEndpoints:
     url: 'http://localhost:3001'
   songService:
     url: 'http://localhost:3003'
+  artistService:
+    url: 'http://localhost:3004'
 policies:
   - basic-auth
   - cors
@@ -63,4 +71,12 @@ pipelines:
       - proxy:
           - action:
               serviceEndpoint: songService
+              changeOrigin: true
+  artistPipeline:
+    apiEndpoints:
+      - artist
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: artistService
               changeOrigin: true

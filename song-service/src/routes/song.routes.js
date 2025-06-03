@@ -7,6 +7,7 @@ const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/", songController.getSongs);
+router.get("/:id", songController.getSongById);
 router.post(
   "/",
   authenticateToken,

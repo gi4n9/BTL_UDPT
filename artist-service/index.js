@@ -1,11 +1,9 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const artistRoutes = require("./src/routes/artist.route");
-
 const app = express();
 const PORT = process.env.PORT;
-
-require("dotenv").config();
 
 // Middleware
 app.use(cors());
